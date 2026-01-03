@@ -1,7 +1,8 @@
-package com.example.egabank.enums;
+package com.example.bankega.enums;
 
 public enum TypeTransaction {
     DEPOT,
     RETRAIT,
-    VIREMENT
+    VIREMENT_DEBIT,
+    VIREMENT_CREDIT
 }

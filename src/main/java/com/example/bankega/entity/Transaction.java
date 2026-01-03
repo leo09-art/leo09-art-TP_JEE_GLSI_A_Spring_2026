@@ -1,10 +1,15 @@
-package com.example.egabank.entity;
+package com.example.bankega.entity;
 
-import com.example.egabank.enums.TypeTransaction;
+import com.example.bankega.enums.TypeTransaction;
+import com.example.bankega.enums.TypeTransaction;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
+
+@Data
 @Entity
 @Table(name = "transactions")
 public class Transaction {
@@ -19,7 +24,7 @@ public class Transaction {
     private double montant;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDateTime date;
 
     @ManyToOne()
     @JoinColumn(name = "compte_id" , nullable = false)

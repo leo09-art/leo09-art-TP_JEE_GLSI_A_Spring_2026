@@ -1,9 +1,6 @@
-package com.example.bankega.entity;
+package com.example.bankega.dto;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -19,7 +16,7 @@ public class InscriptionRequest {
     private String  prenom;
 
     @Column(nullable = false)
-    private LocalDate dateNais;
+    private LocalDateTime dateNais;
 
     private String  sexe;
 

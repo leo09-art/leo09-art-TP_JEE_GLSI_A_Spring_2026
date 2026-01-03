@@ -3,6 +3,7 @@ package com.example.bankega.dto;
 import lombok.Data;
 
 @Data
-public class RefreshRequest {
-    private String refreshToken;
+public class CompteRequest {
+
+    private  String type;
 }

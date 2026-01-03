@@ -1,12 +1,14 @@
-package com.example.egabank.entity;
+package com.example.bankega.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Data
 @Entity
 @Table(name = "clients")
 public class Client {
@@ -21,7 +23,7 @@ public class Client {
     private String  prenom;
 
     @Column(nullable = false)
-    private LocalDate dateNais;
+    private LocalDateTime dateNais;
 
     @Column(nullable = false)
     private String  sexe;
@@ -39,7 +41,4 @@ public class Client {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
     private List<Compte> comptes = new ArrayList<>();
 
-
-    @OneToOne(mappedBy = "client")
-    private  User user;
 }
