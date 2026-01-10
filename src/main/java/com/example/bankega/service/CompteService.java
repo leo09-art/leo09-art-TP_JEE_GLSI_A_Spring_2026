@@ -45,7 +45,7 @@ public class CompteService {
     }
 
     public Compte getCompteSecurise(String compteNum, Client client){
-        Compte compte = compteRepository.findByNum(compteNum)
+        Compte compte = compteRepository.findByNumAndActifTrue(compteNum)
                 .orElseThrow(()-> new ResourceNotFoundException("Compte non trouve"));
 
 
@@ -71,5 +71,20 @@ public class CompteService {
 
         return compte;
     }
+
+
+    public void supprimerCompte(String compteNum) {
+        Compte compte = compteRepository.findByNumAndActifTrue(compteNum)
+                .orElseThrow(() -> new ResourceNotFoundException("Compte introuvable"));
+
+        System.out.println(compte.getSolde() !=0);
+        if (compte.getSolde() != 0) {
+            throw new RuntimeException("Impossible de supprimer un compte avec solde non nul");
+        }
+
+        compte.setActif(false);
+    }
+
+
 
 }

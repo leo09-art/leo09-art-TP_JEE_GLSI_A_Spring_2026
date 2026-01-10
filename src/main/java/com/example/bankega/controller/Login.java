@@ -1,11 +1,14 @@
 package com.example.bankega.controller;
 
 import com.example.bankega.component.JwtUtil;
+import com.example.bankega.dto.InscriptionRequest;
 import com.example.bankega.dto.LoginRequest;
 import com.example.bankega.dto.RefreshRequest;
+import com.example.bankega.entity.Client;
 import com.example.bankega.entity.User;
 import com.example.bankega.exception.ResourceNotFoundException;
 import com.example.bankega.repository.UserRepository;
+import com.example.bankega.service.InscriptionService;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,14 +26,17 @@ import java.util.Optional;
 @RequestMapping("")
 public class Login {
     private  final JwtUtil jwtUtil;
+    private final InscriptionService inscriptionService;
+
 
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Login(JwtUtil jwtUtil) {
+    public Login(JwtUtil jwtUtil, InscriptionService inscriptionService) {
         this.jwtUtil = jwtUtil;
+        this.inscriptionService = inscriptionService;
     }
 
     @PostMapping("/api/login")
@@ -59,5 +65,10 @@ public class Login {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("Refresh token expired");
         }
+    }
+    @PostMapping("/api/register")
+    public ResponseEntity<Client> createClient(@RequestBody InscriptionRequest inscriptionRequest){
+        Client createdClient = inscriptionService.inscrireClient(inscriptionRequest);
+        return new  ResponseEntity<>(createdClient, HttpStatus.CREATED);
     }
 }

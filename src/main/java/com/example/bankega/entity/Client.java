@@ -30,11 +30,16 @@ public class Client {
 
     private String  adresse;
 
-    @Column(unique = true)
+    @Column(nullable = false)
     private String  tel;
+
 
     @Column(unique = true)
     private String  courriel;
+
+    @Column(nullable = false)
+    private boolean actif = true;
+
 
     private String  nationalite;
 

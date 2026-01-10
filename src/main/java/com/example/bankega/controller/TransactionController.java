@@ -1,6 +1,7 @@
 package com.example.bankega.controller;
 
 
+import com.example.bankega.dto.DepotRequest;
 import com.example.bankega.dto.TransactionResponseDTO;
 import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
@@ -56,14 +57,17 @@ public class TransactionController {
     }
 
     @PostMapping("/versement")
-    public TransactionResponseDTO versement(Authentication authentication, @RequestParam String compteNum, @RequestParam double montant){
-//        return ResponseEntity.ok(Map.of("id", compteId));
-        System.out.println(authentication.getName());
+    public TransactionResponseDTO versement(Authentication authentication, @RequestBody DepotRequest depotRequest){
+        String compteNum = depotRequest.getNumCompte();
+        double montant = depotRequest.getMontant();
+//        System.out.println(authentication.getName());
        return TransactionMapper.toDTO(transactionService.depot(compteNum, montant, getClient(authentication)));
     }
 
     @PostMapping("/retrait")
-    public TransactionResponseDTO retrait(Authentication authentication,@RequestParam String compteNum, @RequestParam double montant){
+    public TransactionResponseDTO retrait(Authentication authentication,@RequestBody DepotRequest depotRequest){
+        String compteNum = depotRequest.getNumCompte();
+        double montant = depotRequest.getMontant();
        return TransactionMapper.toDTO(transactionService.retrait(compteNum, montant, getClient(authentication)));
     }
 

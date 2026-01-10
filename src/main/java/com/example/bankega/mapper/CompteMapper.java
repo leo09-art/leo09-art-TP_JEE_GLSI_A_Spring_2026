@@ -11,7 +11,9 @@ public class CompteMapper {
         dto.setSolde(compte.getSolde());
         dto.setDateCreation(compte.getDateCreation());
         dto.setType(String.valueOf(compte.getType()));
-        dto.setClient(compte.getClient());
+//        dto.setClient(compte.getClient());
+        dto.setActif(compte.isActif()
+        );
 
         return dto;
     }

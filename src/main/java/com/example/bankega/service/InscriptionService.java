@@ -4,6 +4,8 @@ package com.example.bankega.service;
 import com.example.bankega.entity.Client;
 import com.example.bankega.dto.InscriptionRequest;
 import com.example.bankega.entity.User;
+import com.example.bankega.enums.Role;
+import com.example.bankega.exception.EmailAlreadyExistsException;
 import com.example.bankega.repository.ClientRepository;
 import com.example.bankega.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -28,6 +30,10 @@ public class InscriptionService {
 
     public Client inscrireClient(InscriptionRequest req){
 
+        if (userRepository.existsByUsername(req.getCourriel())) {
+            throw new EmailAlreadyExistsException("Cet email est déjà utilisé");
+        }
+
 
         Client client = new Client();
         client.setNom(req.getNom());
@@ -46,6 +52,7 @@ public class InscriptionService {
         user.setUsername(req.getCourriel());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setClient(createdClient);
+        user.setRole(Role.CLIENT);
         userRepository.save(user);
         return createdClient ;
     }

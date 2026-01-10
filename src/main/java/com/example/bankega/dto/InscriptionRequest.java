@@ -30,8 +30,6 @@ public class InscriptionRequest {
 
     private String  nationalite;
 
-    private  String username;
-
     @Column(nullable = false)
     private  String password;
 }

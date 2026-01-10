@@ -33,13 +33,13 @@ public class TransactionService {
     TransactionRepository transactionRepository;
 
     public Compte getCompteSecurise(String compteNum, Client client){
-        Compte compte = compteRepository.findByNum(compteNum)
+        Compte compte = compteRepository.findByNumAndActifTrue(compteNum)
                 .orElseThrow(()-> new ResourceNotFoundException("Compte non trouve"));
 
 
-        System.out.println("id client connecter: "+client.getCourriel());
-        System.out.println("id client connecter: "+client.getCourriel());
-        System.out.println("id client compte enovoyer : "+compte.getClient().getId());
+//        System.out.println("id client connecter: "+client.getCourriel());
+//        System.out.println("id client connecter: "+client.getCourriel());
+//        System.out.println("id client compte enovoyer : "+compte.getClient().getId());
         if(compte.getClient().getId() != client.getId()){
             throw  new UnauthorizedAccessException("Acces non autorise au compte");
         }
@@ -89,7 +89,7 @@ public class TransactionService {
             throw  new RuntimeException("Solde insuffisant pour le virement");
         }
 
-        Compte dest = compteRepository.findByNum(compteDestinationNum)
+        Compte dest = compteRepository.findByNumAndActifTrue(compteDestinationNum)
                 .orElseThrow(()->new ResourceNotFoundException("Compte de destination non trouve"));
 
         source.setSolde(source.getSolde() - montant);

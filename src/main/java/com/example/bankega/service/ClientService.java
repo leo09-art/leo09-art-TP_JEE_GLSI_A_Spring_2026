@@ -2,6 +2,7 @@ package com.example.bankega.service;
 
 import com.example.bankega.dto.ClientUpdateRequest;
 import com.example.bankega.entity.Client;
+import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.User;
 import com.example.bankega.exception.ResourceNotFoundException;
 import com.example.bankega.repository.ClientRepository;
@@ -34,4 +35,22 @@ public class ClientService {
             client.setTel(req.getTel());
         return client;
     }
+
+    @Transactional
+    public void supprimerClient(Long clientId) {
+
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client introuvable"));
+
+        boolean hasCompteActif = client.getComptes()
+                .stream()
+                .anyMatch(Compte::isActif);
+
+        if (hasCompteActif) {
+            throw new RuntimeException("Le client possède encore des comptes actifs");
+        }
+
+        client.setActif(false);
+    }
+
 }

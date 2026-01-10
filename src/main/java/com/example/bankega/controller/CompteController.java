@@ -8,6 +8,7 @@ import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.User;
 import com.example.bankega.enums.TypeCompte;
+import com.example.bankega.exception.ResourceNotFoundException;
 import com.example.bankega.mapper.CompteMapper;
 import com.example.bankega.repository.ClientRepository;
 import com.example.bankega.repository.CompteRepository;
@@ -37,10 +38,40 @@ public class CompteController {
         this.userRepository = userRepository;
     }
 
+//    @GetMapping
+//    public ResponseEntity<List<CompteResponseDTO>> getComptes(){
+//        List<CompteResponseDTO> comptes = compteRepository
+//                .findAll()
+//                .stream()
+//                .map(t->{
+//                    return CompteMapper.toDTO(t);
+//                })
+//                .toList();
+//        return new ResponseEntity<>(comptes, HttpStatus.OK);
+//    }
     @GetMapping
-    public ResponseEntity<List<CompteResponseDTO>> getComptes(){
+    public ResponseEntity<List<CompteResponseDTO>> getClientCompte(
+            Authentication authentication
+//            ,@PathVariable Long id
+    ){
+        Client client = getClient(authentication);
         List<CompteResponseDTO> comptes = compteRepository
-                .findAll()
+                .findByClientIdAndActifTrue(client.getId())
+                .stream()
+                .map(t->{
+                    return CompteMapper.toDTO(t);
+                })
+                .toList();
+        return new ResponseEntity<>(comptes, HttpStatus.OK);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<CompteResponseDTO>> getClientComptes(
+            Authentication authentication
+//            ,@PathVariable Long id
+    ){
+        List<CompteResponseDTO> comptes = compteRepository
+                .findByActifTrue()
                 .stream()
                 .map(t->{
                     return CompteMapper.toDTO(t);
@@ -53,9 +84,9 @@ public class CompteController {
     public ResponseEntity<CompteResponseDTO> createdCompte(Authentication authentication,@RequestParam String type){
         String username = authentication.getName();
 
-        Optional<User> user = Optional.ofNullable(userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("utilisateur non trouvé")));
-        Compte compte = compteService.CreerCompte(user.get().getClient(), TypeCompte.valueOf(type));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("utilisateur non trouvé"));
+        Compte compte = compteService.CreerCompte(user.getClient(), TypeCompte.valueOf(type));
     return new ResponseEntity<>(CompteMapper.toDTO(compte), HttpStatus.CREATED);
     }
 
@@ -78,5 +109,12 @@ public class CompteController {
                 .getClient();
         return  client;
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> supprimerCompte(@RequestParam String compteNum){
+        compteService.supprimerCompte(compteNum);
+        return ResponseEntity.ok("Compte désactivé avec succès");
+    }
+
 
 }

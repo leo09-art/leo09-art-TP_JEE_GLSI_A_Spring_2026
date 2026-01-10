@@ -13,7 +13,8 @@ public class ClientMapper {
         dto.setSexe(client.getSexe());
         dto.setTel(client.getTel());
         dto.setNationalite(client.getNationalite());
-        dto.setNationalite(client.getNationalite());
+        dto.setDateNais(client.getDateNais());
+        dto.setActif(client.isActif());
 
         return dto;
     }

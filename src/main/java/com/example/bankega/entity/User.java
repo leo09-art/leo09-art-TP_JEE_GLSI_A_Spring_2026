@@ -1,5 +1,6 @@
 package com.example.bankega.entity;
 
+import com.example.bankega.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +18,9 @@ public class User {
 
     @Column(nullable = false)
     private  String password;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @OneToOne()
     @JoinColumn(name = "client_id", nullable = false)

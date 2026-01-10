@@ -12,7 +12,7 @@ public class JwtUtil {
 
     private final String SECRET = "secret_key_ega_2026_secret_secret";
     private final long ACCESS_EXP = 15 * 60 * 1000; // 15MIN
-    private final long REFRESH_EXP = 7 * 24 * 60 * 60 * 1000; // 7JOUR
+    private final long REFRESH_EXP = 24 * 60 * 60 * 1000; // 7JOUR
 
     public  String genretedAccessToken(String username){
         return generateToken(username,ACCESS_EXP);

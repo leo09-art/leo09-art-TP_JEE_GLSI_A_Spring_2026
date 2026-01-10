@@ -1,13 +1,14 @@
 package com.example.bankega.controller;
 
-import com.example.bankega.component.JwtUtil;
 import com.example.bankega.dto.ClientDTO;
 import com.example.bankega.dto.ClientUpdateRequest;
-import com.example.bankega.dto.LoginRequest;
+import com.example.bankega.dto.UserDTO;
 import com.example.bankega.entity.Client;
 import com.example.bankega.dto.InscriptionRequest;
 import com.example.bankega.entity.User;
+import com.example.bankega.exception.ResourceNotFoundException;
 import com.example.bankega.mapper.ClientMapper;
+import com.example.bankega.mapper.UserMapper;
 import com.example.bankega.repository.ClientRepository;
 import com.example.bankega.repository.UserRepository;
 import com.example.bankega.service.ClientService;
@@ -18,9 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/auth/clients")
@@ -41,8 +41,13 @@ public class ClientController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Client>> getAllClients(){
-        return new ResponseEntity<>(clientRepository.findAll(),HttpStatus.OK);
+    public ResponseEntity<Stream<ClientDTO>> getAllClients(){
+        return new ResponseEntity<>(clientRepository.findAll()
+                .stream().map(
+                        t->{
+                            return ClientMapper.toDto(t);
+                        }
+                ),HttpStatus.OK);
     }
 
     @PostMapping
@@ -65,6 +70,15 @@ public class ClientController {
         return ClientMapper.toDto(user.getClient());
     }
 
+    @GetMapping("/user")
+    public UserDTO getCurrentUser(Authentication authentication){
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(()-> new ResourceNotFoundException("utilisateur non trouvé"));
+        return UserMapper.toDTO(user);
+    }
+
     @PutMapping("/me")
     public  ClientDTO updateClient(
             Authentication authentication,
@@ -80,5 +94,12 @@ public class ClientController {
                 .getClient();
         return  client;
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> supprimerClient(@PathVariable Long id){
+        clientService.supprimerClient(id);
+        return ResponseEntity.ok("Client désactivé avec succès");
+    }
+
 
 }

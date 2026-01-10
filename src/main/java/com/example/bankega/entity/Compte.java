@@ -29,6 +29,10 @@ public class Compte {
     @Column(nullable = false)
     private double solde=0.0;
 
+    @Column(nullable = false)
+    private boolean actif = true;
+
+
     @ManyToOne()
     @JoinColumn(name = "client_id" , nullable = false)
     private Client client;

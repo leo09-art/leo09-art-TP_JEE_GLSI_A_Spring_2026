@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CompteRepository extends JpaRepository<Compte, Long> {
-    List<Compte> findByClient(Client client);
-    Optional<Compte> findByNum(String num);
+    List<Compte> findByClientIdAndActifTrue(Long clientId);
+    Optional<Compte> findByNumAndActifTrue(String num);
+    List<Compte> findByActifTrue();
 }
