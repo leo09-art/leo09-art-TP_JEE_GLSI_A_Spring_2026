@@ -86,7 +86,7 @@ public class TransactionService {
     {
         Compte source = getCompteSecurise(compteSourceNum, client);
         if(source.getSolde() < montant){
-            throw  new RuntimeException("Solde insuffisant pour le virement");
+            throw  new InsufficientBalanceException("Solde insuffisant pour le virement");
         }
 
         Compte dest = compteRepository.findByNumAndActifTrue(compteDestinationNum)
@@ -124,5 +124,9 @@ public class TransactionService {
                 end,
                 pageable
         ).map(TransactionMapper::toDTO);
+    }
+
+    public List<Transaction> getTransactionsClient(Client client) {
+        return transactionRepository.findByCompte_Client_Id(client.getId());
     }
 }

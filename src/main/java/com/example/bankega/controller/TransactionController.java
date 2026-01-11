@@ -3,6 +3,7 @@ package com.example.bankega.controller;
 
 import com.example.bankega.dto.DepotRequest;
 import com.example.bankega.dto.TransactionResponseDTO;
+import com.example.bankega.dto.VirementRequest;
 import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.Transaction;
@@ -44,11 +45,11 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Transaction>> getAllTransactions(){
-        return new ResponseEntity<>(transactionRepository.findAll(),HttpStatus.OK);
+//    @GetMapping
+//    public ResponseEntity<List<Transaction>> getAllTransactions(){
+//        return new ResponseEntity<>(transactionRepository.findAll(),HttpStatus.OK);
 
-    }
+//    }
 
     private Client getClient(Authentication authentication){
         return  userRepository.findByUsername(authentication.getName())
@@ -72,9 +73,13 @@ public class TransactionController {
     }
 
     @PostMapping("/virement")
-    public ResponseEntity<String> virement(Authentication authentication,@RequestParam String sourceNum, @RequestParam String destNum, @RequestParam double montant){
-        transactionService.virement(sourceNum, destNum, montant, getClient(authentication));
-        return ResponseEntity.ok("Virement effectué avec succès");
+    public ResponseEntity<Map<String,String>> virement(Authentication authentication, @RequestBody VirementRequest virementRequest){
+        String compteNumSource = virementRequest.getNumCompteSource();
+        String compteNumDest = virementRequest.getNumCompteDest();
+        double montant = virementRequest.getMontant();
+//        System.out.println("here");
+        transactionService.virement(compteNumSource, compteNumDest, montant, getClient(authentication));
+        return ResponseEntity.ok(Map.of("message","Virement effectué avec succès"));
     }
 
     @GetMapping("/histo/{compteId}")
@@ -113,4 +118,20 @@ public class TransactionController {
                 client
         );
     }
+
+    @GetMapping
+    public ResponseEntity<List<TransactionResponseDTO>> getMesTransactions(
+            Authentication authentication
+    ) {
+        Client client = getClient(authentication);
+
+        List<TransactionResponseDTO> transactions = transactionService
+                .getTransactionsClient(client)
+                .stream()
+                .map(TransactionMapper::toDTO)
+                .toList();
+
+        return ResponseEntity.ok(transactions);
+    }
+
 }

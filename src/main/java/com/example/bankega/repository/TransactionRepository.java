@@ -15,5 +15,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     Page<Transaction> findByCompteIdAndDateBetween(Long compteId, LocalDateTime start, LocalDateTime end,Pageable pageable
     );
     List<Transaction> findByCompteId(Long compteId);
-
+    List<Transaction> findByCompte_Client_Id(Long clientId);
 }
