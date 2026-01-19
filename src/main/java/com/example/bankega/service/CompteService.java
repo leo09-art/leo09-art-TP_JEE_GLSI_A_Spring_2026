@@ -104,4 +104,8 @@ public class CompteService {
         compte.setActif(false);
     }
 
+    public long nombreComptes(Client client) {
+        return compteRepository.countByClientIdAndActifTrue(client.getId());
+    }
+
 }

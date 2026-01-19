@@ -130,5 +130,15 @@ public class CompteController {
         return new ResponseEntity<>("Compte désactivé avec succès", HttpStatus.OK);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> countMesComptes(Authentication authentication) {
+
+        Client client = getClient(authentication);
+        long count = compteService.nombreComptes(client);
+
+        return ResponseEntity.ok(count);
+    }
+
+
 
 }

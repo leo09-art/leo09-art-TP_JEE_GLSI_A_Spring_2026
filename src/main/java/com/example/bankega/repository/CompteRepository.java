@@ -11,4 +11,5 @@ public interface CompteRepository extends JpaRepository<Compte, Long> {
     List<Compte> findByClientIdAndActifTrue(Long clientId);
     Optional<Compte> findByNumAndActifTrue(String num);
     List<Compte> findByActifTrue();
+    long countByClientIdAndActifTrue(Long clientId);
 }
