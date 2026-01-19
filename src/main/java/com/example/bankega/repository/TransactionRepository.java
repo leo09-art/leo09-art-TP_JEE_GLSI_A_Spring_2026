@@ -1,5 +1,6 @@
 package com.example.bankega.repository;
 
+import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.Transaction;
 import org.springframework.data.domain.Page;
@@ -12,8 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    Page<Transaction> findByCompteIdAndDateBetween(Long compteId, LocalDateTime start, LocalDateTime end,Pageable pageable
+    List<Transaction> findByCompteClientIdAndDateBetween(Long clientId, LocalDateTime date, LocalDateTime date2
     );
     List<Transaction> findByCompteId(Long compteId);
-    List<Transaction> findByCompte_Client_Id(Long clientId);
+    List<Transaction> findByCompteClientIdAndCompteActifTrue(Long clientId);
 }

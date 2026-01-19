@@ -4,17 +4,22 @@ import com.example.bankega.dto.TransactionResponseDTO;
 import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.Transaction;
+import com.example.bankega.entity.User;
 import com.example.bankega.enums.TypeTransaction;
 import com.example.bankega.exception.InsufficientBalanceException;
 import com.example.bankega.exception.ResourceNotFoundException;
 import com.example.bankega.exception.UnauthorizedAccessException;
 import com.example.bankega.mapper.TransactionMapper;
+import com.example.bankega.repository.ClientRepository;
 import com.example.bankega.repository.CompteRepository;
 import com.example.bankega.repository.TransactionRepository;
+import com.example.bankega.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,7 +35,16 @@ public class TransactionService {
     CompteRepository compteRepository;
 
     @Autowired
+    UserRepository userRepository;
+
+    @Autowired
     TransactionRepository transactionRepository;
+
+    private PasswordEncoder passwordEncoder;
+
+    public TransactionService(ClientRepository clientRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public Compte getCompteSecurise(String compteNum, Client client){
         Compte compte = compteRepository.findByNumAndActifTrue(compteNum)
@@ -46,8 +60,20 @@ public class TransactionService {
 
         return  compte;
     }
-    public Transaction depot(String compteNum, double montant, Client client)
+    public Transaction depot(Authentication authentication, String compteNum, double montant, String password, Client client)
     {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(
+                password,
+                user.getPassword()
+        )) {
+            throw new UnauthorizedAccessException("Mot de passe incorrect");
+        }
+
+
         Compte compte = getCompteSecurise(compteNum, client);
 
         compte.setSolde(compte.getSolde() + montant);
@@ -62,8 +88,18 @@ public class TransactionService {
         return  transactionRepository.save(transaction);
     }
 
-    public  Transaction retrait(String compteNum, double montant, Client client)
+    public  Transaction retrait(Authentication authentication,String compteNum, double montant,String password ,Client client)
     {
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(
+                password,
+                user.getPassword()
+        )) {
+            throw new UnauthorizedAccessException("Mot de passe incorrect");
+        }
+
         Compte compte = getCompteSecurise(compteNum, client);
 
         if(compte.getSolde() < montant){
@@ -82,8 +118,19 @@ public class TransactionService {
         return  transactionRepository.save(transaction);
     }
 
-    public void virement(String compteSourceNum, String compteDestinationNum, double montant, Client client)
+    public void virement(Authentication authentication,String compteSourceNum, String compteDestinationNum, double montant,String password, Client client)
     {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(
+                password,
+                user.getPassword()
+        )) {
+            throw new UnauthorizedAccessException("Mot de passe incorrect");
+        }
+
         Compte source = getCompteSecurise(compteSourceNum, client);
         if(source.getSolde() < montant){
             throw  new InsufficientBalanceException("Solde insuffisant pour le virement");
@@ -110,23 +157,40 @@ public class TransactionService {
         return  transaction;
     }
 
-    public Page<TransactionResponseDTO> historique(
-            String compteNum,
-            LocalDateTime start,
-            LocalDateTime end,
-            Pageable pageable,
-            Client client
-    ){
-        Compte compte = getCompteSecurise(compteNum,client);
-        return transactionRepository.findByCompteIdAndDateBetween(
-                compte.getId(),
-                start,
-                end,
-                pageable
-        ).map(TransactionMapper::toDTO);
+//    public Page<TransactionResponseDTO> historique(
+//            String compteNum,
+//            LocalDateTime start,
+//            LocalDateTime end,
+//            Pageable pageable,
+//            Client client
+//    ){
+//        Compte compte = getCompteSecurise(compteNum,client);
+//        return transactionRepository.findByCompteClientIdAndDateBetween(
+//                compte.getId(),
+//                start,
+//                end,
+//                pageable
+//        ).map(TransactionMapper::toDTO);
+//    }
+
+    public List<TransactionResponseDTO> getTransactionsBetweenDates(
+            Client client,
+            LocalDateTime dateDebut,
+            LocalDateTime dateFin
+    ) {
+        return transactionRepository
+                .findByCompteClientIdAndDateBetween(
+                        client.getId(),
+                        dateDebut,
+                        dateFin
+                )
+                .stream()
+                .map(TransactionMapper::toDTO)
+                .toList();
     }
 
+
     public List<Transaction> getTransactionsClient(Client client) {
-        return transactionRepository.findByCompte_Client_Id(client.getId());
+        return transactionRepository.findByCompteClientIdAndCompteActifTrue(client.getId());
     }
 }

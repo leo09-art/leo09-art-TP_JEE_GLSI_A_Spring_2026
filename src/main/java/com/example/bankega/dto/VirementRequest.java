@@ -8,5 +8,6 @@ public class VirementRequest {
     private  String numCompteSource;
     private  String numCompteDest;
     private  double montant;
+    private  String password;
 
 }

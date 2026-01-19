@@ -15,6 +15,7 @@ public class ClientDTO {
     private String adresse;
     private String  tel;
     private String  nationalite;
+    private String  courriel;
     private Boolean  actif;
 
 }

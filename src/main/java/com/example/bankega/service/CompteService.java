@@ -4,14 +4,18 @@ import com.example.bankega.dto.CompteUpdateRequest;
 import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.Transaction;
+import com.example.bankega.entity.User;
 import com.example.bankega.enums.TypeCompte;
 import com.example.bankega.enums.TypeTransaction;
 import com.example.bankega.exception.ResourceNotFoundException;
 import com.example.bankega.exception.UnauthorizedAccessException;
 import com.example.bankega.repository.CompteRepository;
 import com.example.bankega.repository.TransactionRepository;
+import com.example.bankega.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,16 +30,22 @@ public class CompteService {
     private CompteRepository compteRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     private final IbanService ibanService;
+    private final PasswordEncoder passwordEncoder;
 
-    public  CompteService(CompteRepository compteRepository, TransactionRepository transactionRepository, IbanService ibanService){
+    public  CompteService(CompteRepository compteRepository, TransactionRepository transactionRepository, IbanService ibanService, PasswordEncoder passwordEncoder){
         this.compteRepository = compteRepository;
         this.transactionRepository = transactionRepository;
         this.ibanService = ibanService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public  Compte CreerCompte(Client client, TypeCompte typeCompte){
+    public  Compte CreerCompte(Authentication authentication, Client client, TypeCompte typeCompte){
+
+
         Compte compte = new Compte();
         compte.setClient(client);
         compte.setDateCreation(LocalDateTime.now());
@@ -73,18 +83,25 @@ public class CompteService {
     }
 
 
-    public void supprimerCompte(String compteNum) {
-        Compte compte = compteRepository.findByNumAndActifTrue(compteNum)
-                .orElseThrow(() -> new ResourceNotFoundException("Compte introuvable"));
+    public void supprimerCompte(Authentication authentication, Compte compte, String password) {
+//        System.out.println(compte.getSolde() !=0);
 
-        System.out.println(compte.getSolde() !=0);
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        if (!passwordEncoder.matches(
+                password,
+                user.getPassword()
+        )) {
+            throw new UnauthorizedAccessException("Mot de passe incorrect");
+        }
+
+
         if (compte.getSolde() != 0) {
             throw new RuntimeException("Impossible de supprimer un compte avec solde non nul");
         }
 
         compte.setActif(false);
     }
-
-
 
 }

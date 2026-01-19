@@ -8,6 +8,5 @@ import java.time.LocalDateTime;
 public class ClientUpdateRequest {
     private String adresse;
     private String tel;
-
-
+    private String password;
 }

@@ -15,6 +15,7 @@ public class ClientMapper {
         dto.setNationalite(client.getNationalite());
         dto.setDateNais(client.getDateNais());
         dto.setActif(client.isActif());
+        dto.setCourriel(client.getCourriel());
 
         return dto;
     }

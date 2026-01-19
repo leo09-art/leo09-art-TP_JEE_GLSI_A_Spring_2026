@@ -1,14 +1,12 @@
 package com.example.bankega.controller;
 
-import com.example.bankega.dto.CompteRequest;
-import com.example.bankega.dto.CompteResponseDTO;
-import com.example.bankega.dto.CompteUpdateRequest;
-import com.example.bankega.dto.TransactionResponseDTO;
+import com.example.bankega.dto.*;
 import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
 import com.example.bankega.entity.User;
 import com.example.bankega.enums.TypeCompte;
 import com.example.bankega.exception.ResourceNotFoundException;
+import com.example.bankega.exception.UnauthorizedAccessException;
 import com.example.bankega.mapper.CompteMapper;
 import com.example.bankega.repository.ClientRepository;
 import com.example.bankega.repository.CompteRepository;
@@ -17,6 +15,7 @@ import com.example.bankega.service.CompteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,13 +28,15 @@ public class CompteController {
 
     private final CompteService compteService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     CompteRepository compteRepository;
     ClientRepository clientRepository;
-    CompteController(CompteRepository compteRepository, ClientRepository clientRepository, CompteService compteService, UserRepository userRepository){
+    CompteController(CompteRepository compteRepository, ClientRepository clientRepository, CompteService compteService, UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.compteRepository = compteRepository;
         this.clientRepository = clientRepository;
         this.compteService = compteService;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
 //    @GetMapping
@@ -81,12 +82,23 @@ public class CompteController {
     }
 
     @PostMapping
-    public ResponseEntity<CompteResponseDTO> createdCompte(Authentication authentication,@RequestParam String type){
+    public ResponseEntity<CompteResponseDTO> createdCompte(Authentication authentication,@RequestBody CreatedCompteRequest createdCompteRequest){
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        String password =  createdCompteRequest.getPassword();
+        if (!passwordEncoder.matches(
+                password,
+                user.getPassword()
+        )) {
+            throw new UnauthorizedAccessException("Mot de passe incorrect");
+        }
+
+        String type = createdCompteRequest.getAccountForm();
         String username = authentication.getName();
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("utilisateur non trouvé"));
-        Compte compte = compteService.CreerCompte(user.getClient(), TypeCompte.valueOf(type));
+        Compte compte = compteService.CreerCompte(authentication,user.getClient(), TypeCompte.valueOf(type));
     return new ResponseEntity<>(CompteMapper.toDTO(compte), HttpStatus.CREATED);
     }
 
@@ -110,10 +122,12 @@ public class CompteController {
         return  client;
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> supprimerCompte(@RequestParam String compteNum){
-        compteService.supprimerCompte(compteNum);
-        return ResponseEntity.ok("Compte désactivé avec succès");
+    @PostMapping("/delete")
+    public ResponseEntity<String> supprimerCompte(Authentication authentication,@RequestBody DeleteRequest deleteRequest){
+        Compte compte = compteRepository.findByNumAndActifTrue(deleteRequest.getNumCompte())
+                .orElseThrow(()-> new ResourceNotFoundException("Compte introuvable"));
+        compteService.supprimerCompte(authentication,compte,deleteRequest.getPassword());
+        return new ResponseEntity<>("Compte désactivé avec succès", HttpStatus.OK);
     }
 
 

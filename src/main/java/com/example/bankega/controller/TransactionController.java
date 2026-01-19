@@ -6,24 +6,18 @@ import com.example.bankega.dto.TransactionResponseDTO;
 import com.example.bankega.dto.VirementRequest;
 import com.example.bankega.entity.Client;
 import com.example.bankega.entity.Compte;
-import com.example.bankega.entity.Transaction;
 import com.example.bankega.mapper.TransactionMapper;
 import com.example.bankega.repository.CompteRepository;
 import com.example.bankega.repository.TransactionRepository;
 import com.example.bankega.repository.UserRepository;
 import com.example.bankega.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -61,15 +55,17 @@ public class TransactionController {
     public TransactionResponseDTO versement(Authentication authentication, @RequestBody DepotRequest depotRequest){
         String compteNum = depotRequest.getNumCompte();
         double montant = depotRequest.getMontant();
+        String password = depotRequest.getPassword();
 //        System.out.println(authentication.getName());
-       return TransactionMapper.toDTO(transactionService.depot(compteNum, montant, getClient(authentication)));
+       return TransactionMapper.toDTO(transactionService.depot(authentication,compteNum, montant,password, getClient(authentication)));
     }
 
     @PostMapping("/retrait")
     public TransactionResponseDTO retrait(Authentication authentication,@RequestBody DepotRequest depotRequest){
         String compteNum = depotRequest.getNumCompte();
         double montant = depotRequest.getMontant();
-       return TransactionMapper.toDTO(transactionService.retrait(compteNum, montant, getClient(authentication)));
+        String password = depotRequest.getPassword();
+       return TransactionMapper.toDTO(transactionService.retrait(authentication,compteNum, montant,password, getClient(authentication)));
     }
 
     @PostMapping("/virement")
@@ -77,8 +73,9 @@ public class TransactionController {
         String compteNumSource = virementRequest.getNumCompteSource();
         String compteNumDest = virementRequest.getNumCompteDest();
         double montant = virementRequest.getMontant();
+        String password = virementRequest.getPassword();
 //        System.out.println("here");
-        transactionService.virement(compteNumSource, compteNumDest, montant, getClient(authentication));
+        transactionService.virement(authentication,compteNumSource, compteNumDest, montant,password, getClient(authentication));
         return ResponseEntity.ok(Map.of("message","Virement effectué avec succès"));
     }
 
@@ -97,29 +94,48 @@ public class TransactionController {
                 .toList();
     }
 
-    @GetMapping("/histo")
-    public Page<TransactionResponseDTO> historique(
-            Authentication authentication,
-            @RequestParam String compteNum,
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate start,
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate end,
-            Pageable pageable
-    ) {
-        Client client = getClient(authentication);
-//        return ResponseEntity.ok(Map.of("compteId", compteId, "start", start.atStartOfDay(), "end", end.atTime(23,59,59)));
-        return transactionService.historique(
-                compteNum,
-                start.atStartOfDay(),
-                end.atTime(23,59,59),
-                pageable,
-                client
-        );
-    }
+//    @GetMapping("/histo")
+//    public Page<TransactionResponseDTO> historique(
+//            Authentication authentication,
+//            @RequestParam String compteNum,
+//            @RequestParam
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate start,
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate end,
+//            Pageable pageable
+//    ) {
+//        Client client = getClient(authentication);
+////        return ResponseEntity.ok(Map.of("compteId", compteId, "start", start.atStartOfDay(), "end", end.atTime(23,59,59)));
+//        return transactionService.historique(
+//                compteNum,
+//                start.atStartOfDay(),
+//                end.atTime(23,59,59),
+//                pageable,
+//                client
+//        );
+//    }
 
-    @GetMapping
+@GetMapping
+public ResponseEntity<List<TransactionResponseDTO>> getTransactionsBetweenDates(
+        Authentication authentication,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateDebut,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFin
+) {
+    Client client = getClient(authentication);
+
+    List<TransactionResponseDTO> transactions =
+            transactionService.getTransactionsBetweenDates(
+                    client,
+                    dateDebut,
+                    dateFin
+            );
+
+    return ResponseEntity.ok(transactions);
+}
+
+
+    @GetMapping("/all")
     public ResponseEntity<List<TransactionResponseDTO>> getMesTransactions(
             Authentication authentication
     ) {

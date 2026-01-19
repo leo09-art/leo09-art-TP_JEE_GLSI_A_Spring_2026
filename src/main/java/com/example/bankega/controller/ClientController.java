@@ -7,6 +7,7 @@ import com.example.bankega.entity.Client;
 import com.example.bankega.dto.InscriptionRequest;
 import com.example.bankega.entity.User;
 import com.example.bankega.exception.ResourceNotFoundException;
+import com.example.bankega.exception.UnauthorizedAccessException;
 import com.example.bankega.mapper.ClientMapper;
 import com.example.bankega.mapper.UserMapper;
 import com.example.bankega.repository.ClientRepository;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -32,12 +34,15 @@ public class ClientController {
     @Autowired
     UserRepository userRepository;
 
+    PasswordEncoder passwordEncoder;
+
     private final InscriptionService inscriptionService;
     private final ClientService clientService;
 
-    public ClientController(InscriptionService inscriptionService, ClientService clientService){
+    public ClientController(InscriptionService inscriptionService, ClientService clientService,PasswordEncoder passwordEncoder){
         this.inscriptionService = inscriptionService;
         this.clientService = clientService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -84,6 +89,18 @@ public class ClientController {
             Authentication authentication,
             @RequestBody ClientUpdateRequest request
     ) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        String password = request.getPassword();
+        if (!passwordEncoder.matches(
+                password,
+                user.getPassword()
+        )) {
+            throw new UnauthorizedAccessException("Mot de passe incorrect");
+        }
+
         Client client = getClient(authentication);
         return ClientMapper.toDto(clientService.updateClient(client, request,authentication ));
     }
